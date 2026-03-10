@@ -1,13 +1,9 @@
 import { motion } from "framer-motion"
 import { BarChart3, Clock3, PieChart, TrendingUp } from "lucide-react"
-import { AppLayout } from "@/app/layouts/AppLayout"
 
 export function ReportsPage() {
   return (
-    <AppLayout
-      title="Reportes"
-      description="Consulta indicadores clave, productividad y desempeño operativo."
-    >
+    <>
       <div className="grid gap-6 lg:grid-cols-2">
         <ReportCard
           icon={<BarChart3 className="h-5 w-5" />}
@@ -33,7 +29,7 @@ export function ReportsPage() {
           description="Revisa cómo se distribuyen los tickets entre estados y prioridades."
         />
       </div>
-    </AppLayout>
+    </>
   )
 }
 

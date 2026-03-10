@@ -1,13 +1,9 @@
 import { motion } from "framer-motion"
 import { Bell, Lock, Palette, UserCog } from "lucide-react"
-import { AppLayout } from "@/app/layouts/AppLayout"
 
 export function SettingsPage() {
   return (
-    <AppLayout
-      title="Configuración"
-      description="Administra preferencias del sistema, seguridad y opciones de usuario."
-    >
+    <>
       <div className="grid gap-6 lg:grid-cols-2">
         <SettingsCard
           icon={<UserCog className="h-5 w-5" />}
@@ -33,7 +29,7 @@ export function SettingsPage() {
           description="Ajusta preferencias visuales y personalización de la interfaz."
         />
       </div>
-    </AppLayout>
+    </>
   )
 }
 

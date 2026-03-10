@@ -17,7 +17,6 @@ import {
   X,
 } from "lucide-react"
 
-import { AppLayout } from "@/app/layouts/AppLayout"
 import { useCurrentUser } from "@/app/features/auth/model/useCurrentUser"
 import {
   getCustomerById,
@@ -38,12 +37,13 @@ import {
   type CasePriority,
   type CaseStatus,
 } from "@/app/features/cases/api/casesApi"
+import { generateEntityCode } from "@/shared/lib/formatters/generateCode"
+import { PageHeader } from "@/shared/ui/PageHeader"
 import { SectionCard } from "@/shared/ui/SectionCard"
 import { StatCard } from "@/shared/ui/StatCard"
 import { Timeline, type TimelineItem } from "@/shared/ui/Timeline"
 import { DataTable } from "@/shared/ui/DataTable"
 import { Tabs } from "@/shared/ui/Tabs"
-import { generateEntityCode } from "@/shared/lib/formatters/generateCode"
 
 interface TicketFormState {
   subject: string
@@ -333,37 +333,40 @@ export function CustomerDetailPage() {
   }
 
   return (
-    <AppLayout
-      title={customer ? customer.name : "Detalle del cliente"}
-      description="Consulta la información general del cliente y su contexto dentro de Reach Service."
-    >
+    <>
+      <PageHeader
+        title={customer ? customer.name : "Detalle del cliente"}
+        description="Consulta la información general del cliente y su contexto dentro de Reach Service."
+        actions={
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              onClick={() => navigate("/customers")}
+              className="inline-flex items-center gap-2 rounded-full border border-[#e7edf5] bg-white px-4 py-2 text-sm font-medium text-[#5e6676] transition hover:bg-[#f9fbfd]"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Volver a clientes
+            </button>
+
+            <button
+              onClick={() => setIsTicketModalOpen(true)}
+              className="inline-flex items-center gap-2 rounded-full bg-[#2f80ed] px-4 py-2 text-sm font-medium text-white shadow-[0_10px_24px_rgba(47,128,237,0.22)] transition hover:bg-[#2274e2]"
+            >
+              <Plus className="h-4 w-4" />
+              Nuevo ticket
+            </button>
+
+            <button
+              onClick={() => setIsCaseModalOpen(true)}
+              className="inline-flex items-center gap-2 rounded-full border border-[#d8e6fb] bg-[#eef5ff] px-4 py-2 text-sm font-medium text-[#2f80ed] transition hover:bg-[#e8f1ff]"
+            >
+              <Plus className="h-4 w-4" />
+              Nuevo caso
+            </button>
+          </div>
+        }
+      />
+
       <div className="space-y-6">
-        <div className="flex flex-wrap items-center gap-3">
-          <button
-            onClick={() => navigate("/customers")}
-            className="inline-flex items-center gap-2 rounded-full border border-[#e7edf5] bg-white px-4 py-2 text-sm font-medium text-[#5e6676] transition hover:bg-[#f9fbfd]"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Volver a clientes
-          </button>
-
-          <button
-            onClick={() => setIsTicketModalOpen(true)}
-            className="inline-flex items-center gap-2 rounded-full bg-[#2f80ed] px-4 py-2 text-sm font-medium text-white shadow-[0_10px_24px_rgba(47,128,237,0.22)] transition hover:bg-[#2274e2]"
-          >
-            <Plus className="h-4 w-4" />
-            Nuevo ticket
-          </button>
-
-          <button
-            onClick={() => setIsCaseModalOpen(true)}
-            className="inline-flex items-center gap-2 rounded-full border border-[#d8e6fb] bg-[#eef5ff] px-4 py-2 text-sm font-medium text-[#2f80ed] transition hover:bg-[#e8f1ff]"
-          >
-            <Plus className="h-4 w-4" />
-            Nuevo caso
-          </button>
-        </div>
-
         {loading ? (
           <div className="flex items-center justify-center py-20 text-[#8f95a3]">
             <Loader2 className="mr-3 h-5 w-5 animate-spin" />
@@ -591,173 +594,239 @@ export function CustomerDetailPage() {
       </div>
 
       {isTicketModalOpen && (
-        <ModalShell
-          title="Nuevo ticket"
-          description="Registra una nueva solicitud o incidencia para este cliente."
-          onClose={() => {
-            if (!ticketSubmitting) {
-              setIsTicketModalOpen(false)
-              setTicketForm(initialTicketForm)
-            }
-          }}
-        >
-          <form onSubmit={handleCreateTicket} className="space-y-5">
-            <Field label="Asunto">
-              <input
-                type="text"
-                value={ticketForm.subject}
-                onChange={handleTicketInputChange("subject")}
-                placeholder="Asunto del ticket"
-                className="h-[50px] w-full rounded-[18px] border border-[#eef2f7] bg-[#f8fafc] px-4 text-sm text-[#252733] outline-none placeholder:text-[#a0a5b5] focus:border-[#d8e6fb] focus:bg-white"
-                required
-              />
-            </Field>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#252733]/20 px-4 backdrop-blur-[2px]">
+          <motion.div
+            initial={{ opacity: 0, y: 18, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.2 }}
+            className="w-full max-w-xl rounded-[30px] border border-[#eef2f7] bg-white p-6 shadow-[0_18px_60px_rgba(31,41,55,0.15)]"
+          >
+            <div className="mb-6 flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-semibold tracking-[-0.03em] text-[#252733]">
+                  Nuevo ticket
+                </h2>
+                <p className="mt-1 text-sm text-[#8f95a3]">
+                  Registra una nueva solicitud o incidencia para este cliente.
+                </p>
+              </div>
 
-            <Field label="Descripción">
-              <textarea
-                value={ticketForm.description}
-                onChange={handleTicketInputChange("description")}
-                placeholder="Describe el detalle del ticket"
-                rows={4}
-                className="w-full rounded-[18px] border border-[#eef2f7] bg-[#f8fafc] px-4 py-3 text-sm text-[#252733] outline-none placeholder:text-[#a0a5b5] focus:border-[#d8e6fb] focus:bg-white"
-              />
-            </Field>
-
-            <div className="grid gap-5 md:grid-cols-2">
-              <Field label="Estatus">
-                <select
-                  value={ticketForm.status}
-                  onChange={handleTicketInputChange("status")}
-                  className="h-[50px] w-full rounded-[18px] border border-[#eef2f7] bg-[#f8fafc] px-4 text-sm text-[#252733] outline-none focus:border-[#d8e6fb] focus:bg-white"
-                >
-                  <option value="open">Abierto</option>
-                  <option value="in_progress">En proceso</option>
-                  <option value="resolved">Resuelto</option>
-                  <option value="closed">Cerrado</option>
-                </select>
-              </Field>
-
-              <Field label="Prioridad">
-                <select
-                  value={ticketForm.priority}
-                  onChange={handleTicketInputChange("priority")}
-                  className="h-[50px] w-full rounded-[18px] border border-[#eef2f7] bg-[#f8fafc] px-4 text-sm text-[#252733] outline-none focus:border-[#d8e6fb] focus:bg-white"
-                >
-                  <option value="low">Baja</option>
-                  <option value="medium">Media</option>
-                  <option value="high">Alta</option>
-                  <option value="critical">Crítica</option>
-                </select>
-              </Field>
+              <button
+                onClick={() => {
+                  if (!ticketSubmitting) {
+                    setIsTicketModalOpen(false)
+                    setTicketForm(initialTicketForm)
+                  }
+                }}
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-[#eef2f7] bg-white text-[#6f7787] transition hover:bg-[#f9fbfd]"
+              >
+                <X className="h-4 w-4" />
+              </button>
             </div>
 
-            <ModalActions
-              submitting={ticketSubmitting}
-              submitLabel="Guardar ticket"
-              submittingLabel="Guardando..."
-              onCancel={() => {
-                if (!ticketSubmitting) {
-                  setIsTicketModalOpen(false)
-                  setTicketForm(initialTicketForm)
-                }
-              }}
-            />
-          </form>
-        </ModalShell>
+            <form onSubmit={handleCreateTicket} className="space-y-5">
+              <Field label="Asunto">
+                <input
+                  type="text"
+                  value={ticketForm.subject}
+                  onChange={handleTicketInputChange("subject")}
+                  placeholder="Asunto del ticket"
+                  className="h-[50px] w-full rounded-[18px] border border-[#eef2f7] bg-[#f8fafc] px-4 text-sm text-[#252733] outline-none placeholder:text-[#a0a5b5] focus:border-[#d8e6fb] focus:bg-white"
+                  required
+                />
+              </Field>
+
+              <Field label="Descripción">
+                <textarea
+                  value={ticketForm.description}
+                  onChange={handleTicketInputChange("description")}
+                  placeholder="Describe el detalle del ticket"
+                  rows={4}
+                  className="w-full rounded-[18px] border border-[#eef2f7] bg-[#f8fafc] px-4 py-3 text-sm text-[#252733] outline-none placeholder:text-[#a0a5b5] focus:border-[#d8e6fb] focus:bg-white"
+                />
+              </Field>
+
+              <div className="grid gap-5 md:grid-cols-2">
+                <Field label="Estatus">
+                  <select
+                    value={ticketForm.status}
+                    onChange={handleTicketInputChange("status")}
+                    className="h-[50px] w-full rounded-[18px] border border-[#eef2f7] bg-[#f8fafc] px-4 text-sm text-[#252733] outline-none focus:border-[#d8e6fb] focus:bg-white"
+                  >
+                    <option value="open">Abierto</option>
+                    <option value="in_progress">En proceso</option>
+                    <option value="resolved">Resuelto</option>
+                    <option value="closed">Cerrado</option>
+                  </select>
+                </Field>
+
+                <Field label="Prioridad">
+                  <select
+                    value={ticketForm.priority}
+                    onChange={handleTicketInputChange("priority")}
+                    className="h-[50px] w-full rounded-[18px] border border-[#eef2f7] bg-[#f8fafc] px-4 text-sm text-[#252733] outline-none focus:border-[#d8e6fb] focus:bg-white"
+                  >
+                    <option value="low">Baja</option>
+                    <option value="medium">Media</option>
+                    <option value="high">Alta</option>
+                    <option value="critical">Crítica</option>
+                  </select>
+                </Field>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!ticketSubmitting) {
+                      setIsTicketModalOpen(false)
+                      setTicketForm(initialTicketForm)
+                    }
+                  }}
+                  className="rounded-full border border-[#e7edf5] bg-white px-5 py-3 text-sm font-medium text-[#5e6676] transition hover:bg-[#f9fbfd]"
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={ticketSubmitting}
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-[#2f80ed] px-5 py-3 text-sm font-medium text-white shadow-[0_10px_24px_rgba(47,128,237,0.22)] transition hover:bg-[#2274e2] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {ticketSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {ticketSubmitting ? "Guardando..." : "Guardar ticket"}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
       )}
 
       {isCaseModalOpen && (
-        <ModalShell
-          title="Nuevo caso"
-          description="Registra un nuevo caso o seguimiento para este cliente."
-          onClose={() => {
-            if (!caseSubmitting) {
-              setIsCaseModalOpen(false)
-              setCaseForm(initialCaseForm)
-            }
-          }}
-        >
-          <form onSubmit={handleCreateCase} className="space-y-5">
-            <Field label="Título">
-              <input
-                type="text"
-                value={caseForm.title}
-                onChange={handleCaseInputChange("title")}
-                placeholder="Título del caso"
-                className="h-[50px] w-full rounded-[18px] border border-[#eef2f7] bg-[#f8fafc] px-4 text-sm text-[#252733] outline-none placeholder:text-[#a0a5b5] focus:border-[#d8e6fb] focus:bg-white"
-                required
-              />
-            </Field>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#252733]/20 px-4 backdrop-blur-[2px]">
+          <motion.div
+            initial={{ opacity: 0, y: 18, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.2 }}
+            className="w-full max-w-xl rounded-[30px] border border-[#eef2f7] bg-white p-6 shadow-[0_18px_60px_rgba(31,41,55,0.15)]"
+          >
+            <div className="mb-6 flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-semibold tracking-[-0.03em] text-[#252733]">
+                  Nuevo caso
+                </h2>
+                <p className="mt-1 text-sm text-[#8f95a3]">
+                  Registra un nuevo caso o seguimiento para este cliente.
+                </p>
+              </div>
 
-            <Field label="Descripción">
-              <textarea
-                value={caseForm.description}
-                onChange={handleCaseInputChange("description")}
-                placeholder="Describe el detalle del caso"
-                rows={4}
-                className="w-full rounded-[18px] border border-[#eef2f7] bg-[#f8fafc] px-4 py-3 text-sm text-[#252733] outline-none placeholder:text-[#a0a5b5] focus:border-[#d8e6fb] focus:bg-white"
-              />
-            </Field>
-
-            <div className="grid gap-5 md:grid-cols-2">
-              <Field label="Estatus">
-                <select
-                  value={caseForm.status}
-                  onChange={handleCaseInputChange("status")}
-                  className="h-[50px] w-full rounded-[18px] border border-[#eef2f7] bg-[#f8fafc] px-4 text-sm text-[#252733] outline-none focus:border-[#d8e6fb] focus:bg-white"
-                >
-                  <option value="open">Abierto</option>
-                  <option value="review">En revisión</option>
-                  <option value="escalated">Escalado</option>
-                  <option value="resolved">Resuelto</option>
-                  <option value="closed">Cerrado</option>
-                </select>
-              </Field>
-
-              <Field label="Prioridad">
-                <select
-                  value={caseForm.priority}
-                  onChange={handleCaseInputChange("priority")}
-                  className="h-[50px] w-full rounded-[18px] border border-[#eef2f7] bg-[#f8fafc] px-4 text-sm text-[#252733] outline-none focus:border-[#d8e6fb] focus:bg-white"
-                >
-                  <option value="low">Baja</option>
-                  <option value="medium">Media</option>
-                  <option value="high">Alta</option>
-                  <option value="critical">Crítica</option>
-                </select>
-              </Field>
+              <button
+                onClick={() => {
+                  if (!caseSubmitting) {
+                    setIsCaseModalOpen(false)
+                    setCaseForm(initialCaseForm)
+                  }
+                }}
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-[#eef2f7] bg-white text-[#6f7787] transition hover:bg-[#f9fbfd]"
+              >
+                <X className="h-4 w-4" />
+              </button>
             </div>
 
-            <Field label="Ticket relacionado (opcional)">
-              <select
-                value={caseForm.ticket_id}
-                onChange={handleCaseInputChange("ticket_id")}
-                className="h-[50px] w-full rounded-[18px] border border-[#eef2f7] bg-[#f8fafc] px-4 text-sm text-[#252733] outline-none focus:border-[#d8e6fb] focus:bg-white"
-              >
-                <option value="">Sin ticket relacionado</option>
-                {tickets.map((ticket) => (
-                  <option key={ticket.id} value={ticket.id}>
-                    {ticket.ticket_number} - {ticket.subject}
-                  </option>
-                ))}
-              </select>
-            </Field>
+            <form onSubmit={handleCreateCase} className="space-y-5">
+              <Field label="Título">
+                <input
+                  type="text"
+                  value={caseForm.title}
+                  onChange={handleCaseInputChange("title")}
+                  placeholder="Título del caso"
+                  className="h-[50px] w-full rounded-[18px] border border-[#eef2f7] bg-[#f8fafc] px-4 text-sm text-[#252733] outline-none placeholder:text-[#a0a5b5] focus:border-[#d8e6fb] focus:bg-white"
+                  required
+                />
+              </Field>
 
-            <ModalActions
-              submitting={caseSubmitting}
-              submitLabel="Guardar caso"
-              submittingLabel="Guardando..."
-              onCancel={() => {
-                if (!caseSubmitting) {
-                  setIsCaseModalOpen(false)
-                  setCaseForm(initialCaseForm)
-                }
-              }}
-            />
-          </form>
-        </ModalShell>
+              <Field label="Descripción">
+                <textarea
+                  value={caseForm.description}
+                  onChange={handleCaseInputChange("description")}
+                  placeholder="Describe el detalle del caso"
+                  rows={4}
+                  className="w-full rounded-[18px] border border-[#eef2f7] bg-[#f8fafc] px-4 py-3 text-sm text-[#252733] outline-none placeholder:text-[#a0a5b5] focus:border-[#d8e6fb] focus:bg-white"
+                />
+              </Field>
+
+              <div className="grid gap-5 md:grid-cols-2">
+                <Field label="Estatus">
+                  <select
+                    value={caseForm.status}
+                    onChange={handleCaseInputChange("status")}
+                    className="h-[50px] w-full rounded-[18px] border border-[#eef2f7] bg-[#f8fafc] px-4 text-sm text-[#252733] outline-none focus:border-[#d8e6fb] focus:bg-white"
+                  >
+                    <option value="open">Abierto</option>
+                    <option value="review">En revisión</option>
+                    <option value="escalated">Escalado</option>
+                    <option value="resolved">Resuelto</option>
+                    <option value="closed">Cerrado</option>
+                  </select>
+                </Field>
+
+                <Field label="Prioridad">
+                  <select
+                    value={caseForm.priority}
+                    onChange={handleCaseInputChange("priority")}
+                    className="h-[50px] w-full rounded-[18px] border border-[#eef2f7] bg-[#f8fafc] px-4 text-sm text-[#252733] outline-none focus:border-[#d8e6fb] focus:bg-white"
+                  >
+                    <option value="low">Baja</option>
+                    <option value="medium">Media</option>
+                    <option value="high">Alta</option>
+                    <option value="critical">Crítica</option>
+                  </select>
+                </Field>
+              </div>
+
+              <Field label="Ticket relacionado (opcional)">
+                <select
+                  value={caseForm.ticket_id}
+                  onChange={handleCaseInputChange("ticket_id")}
+                  className="h-[50px] w-full rounded-[18px] border border-[#eef2f7] bg-[#f8fafc] px-4 text-sm text-[#252733] outline-none focus:border-[#d8e6fb] focus:bg-white"
+                >
+                  <option value="">Sin ticket relacionado</option>
+                  {tickets.map((ticket) => (
+                    <option key={ticket.id} value={ticket.id}>
+                      {ticket.ticket_number} - {ticket.subject}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!caseSubmitting) {
+                      setIsCaseModalOpen(false)
+                      setCaseForm(initialCaseForm)
+                    }
+                  }}
+                  className="rounded-full border border-[#e7edf5] bg-white px-5 py-3 text-sm font-medium text-[#5e6676] transition hover:bg-[#f9fbfd]"
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={caseSubmitting}
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-[#2f80ed] px-5 py-3 text-sm font-medium text-white shadow-[0_10px_24px_rgba(47,128,237,0.22)] transition hover:bg-[#2274e2] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {caseSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {caseSubmitting ? "Guardando..." : "Guardar caso"}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
       )}
-    </AppLayout>
+    </>
   )
 }
 
@@ -801,79 +870,5 @@ function Field({
       <span className="mb-2 block text-sm font-medium text-[#8f95a3]">{label}</span>
       {children}
     </label>
-  )
-}
-
-function ModalShell({
-  title,
-  description,
-  children,
-  onClose,
-}: {
-  title: string
-  description: string
-  children: React.ReactNode
-  onClose: () => void
-}) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#252733]/20 px-4 backdrop-blur-[2px]">
-      <motion.div
-        initial={{ opacity: 0, y: 18, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.2 }}
-        className="w-full max-w-xl rounded-[30px] border border-[#eef2f7] bg-white p-6 shadow-[0_18px_60px_rgba(31,41,55,0.15)]"
-      >
-        <div className="mb-6 flex items-start justify-between gap-4">
-          <div>
-            <h2 className="text-xl font-semibold tracking-[-0.03em] text-[#252733]">
-              {title}
-            </h2>
-            <p className="mt-1 text-sm text-[#8f95a3]">{description}</p>
-          </div>
-
-          <button
-            onClick={onClose}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-[#eef2f7] bg-white text-[#6f7787] transition hover:bg-[#f9fbfd]"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-
-        {children}
-      </motion.div>
-    </div>
-  )
-}
-
-function ModalActions({
-  submitting,
-  submitLabel,
-  submittingLabel,
-  onCancel,
-}: {
-  submitting: boolean
-  submitLabel: string
-  submittingLabel: string
-  onCancel: () => void
-}) {
-  return (
-    <div className="flex justify-end gap-3 pt-2">
-      <button
-        type="button"
-        onClick={onCancel}
-        className="rounded-full border border-[#e7edf5] bg-white px-5 py-3 text-sm font-medium text-[#5e6676] transition hover:bg-[#f9fbfd]"
-      >
-        Cancelar
-      </button>
-
-      <button
-        type="submit"
-        disabled={submitting}
-        className="inline-flex items-center justify-center gap-2 rounded-full bg-[#2f80ed] px-5 py-3 text-sm font-medium text-white shadow-[0_10px_24px_rgba(47,128,237,0.22)] transition hover:bg-[#2274e2] disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-        {submitting ? submittingLabel : submitLabel}
-      </button>
-    </div>
   )
 }

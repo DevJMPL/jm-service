@@ -97,40 +97,40 @@ export function RegisterPage() {
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35 }}
-        className="space-y-8"
+        className="space-y-5"
       >
-        <div className="space-y-3 text-center">
-          <h1 className="text-[2.8rem] font-semibold tracking-[-0.05em] text-[#252733]">
-            Crea tu cuenta en Reach Service
+        <div className="space-y-2 text-center">
+          <h1 className="text-[2.1rem] font-semibold tracking-[-0.05em] text-[#252733] leading-tight">
+            Crea tu cuenta
           </h1>
-          <p className="text-[15px] text-[#8f95a3]">
-            Configura tu acceso para gestionar clientes, tickets y casos desde un solo lugar.
+          <p className="text-sm text-[#8f95a3] leading-6">
+            Configura tu acceso para gestionar clientes, tickets y casos.
           </p>
         </div>
 
-        <div className="space-y-5">
-          <div className="flex items-center justify-center gap-4">
-            <AuthSocialButton>
-              <Facebook className="h-5 w-5 text-[#1877f2]" />
+        <div className="space-y-4">
+          <div className="flex items-center justify-center gap-3">
+            <AuthSocialButton className="h-12 w-12">
+              <Facebook className="h-4 w-4 text-[#1877f2]" />
             </AuthSocialButton>
 
-            <AuthSocialButton>
-              <Mail className="h-5 w-5 text-[#ea4335]" />
+            <AuthSocialButton className="h-12 w-12">
+              <Mail className="h-4 w-4 text-[#ea4335]" />
             </AuthSocialButton>
 
-            <AuthSocialButton>
-              <Apple className="h-5 w-5 text-black" />
+            <AuthSocialButton className="h-12 w-12">
+              <Apple className="h-4 w-4 text-black" />
             </AuthSocialButton>
           </div>
 
           <div className="flex items-center gap-4">
             <div className="h-px flex-1 bg-[#e8ecf3]" />
-            <span className="text-sm text-[#a0a5b5]">o continúa con tu correo</span>
+            <span className="text-xs text-[#a0a5b5]">o continúa con tu correo</span>
             <div className="h-px flex-1 bg-[#e8ecf3]" />
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <AuthTextField
             id="fullName"
             label="Nombre completo"

@@ -1,6 +1,5 @@
 import { motion } from "framer-motion"
 import { FileText, FolderKanban, Search, ShieldAlert } from "lucide-react"
-import { AppLayout } from "@/app/layouts/AppLayout"
 
 const cases = [
   {
@@ -28,10 +27,7 @@ const cases = [
 
 export function CasesPage() {
   return (
-    <AppLayout
-      title="Casos"
-      description="Da seguimiento a la operación, escalaciones y resolución de casos."
-    >
+    <>
       <div className="space-y-6">
         <div className="relative w-full max-w-md">
           <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9aa1b1]" />
@@ -80,7 +76,7 @@ export function CasesPage() {
           ))}
         </motion.div>
       </div>
-    </AppLayout>
+    </>
   )
 }
 

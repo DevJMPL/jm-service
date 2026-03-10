@@ -1,5 +1,7 @@
-import { createBrowserRouter } from "react-router-dom"
-import { AuthGuard, GuestGuard } from "@/app/routes/guards"
+import { createBrowserRouter, Navigate } from "react-router-dom"
+
+import { GuestGuard } from "@/app/routes/guards"
+import { ProtectedLayout } from "@/app/routes/ProtectedLayout"
 
 import { HomePage } from "@/app/pages/HomePage"
 import { NotFoundPage } from "@/app/pages/NotFoundPage"
@@ -16,62 +18,6 @@ import { SettingsPage } from "@/app/features/settings/ui/SettingsPage"
 
 export const router = createBrowserRouter([
   {
-    path: "/",
-    element: (
-      <AuthGuard>
-        <HomePage />
-      </AuthGuard>
-    ),
-  },
-  {
-    path: "/customers",
-    element: (
-      <AuthGuard>
-        <CustomersPage />
-      </AuthGuard>
-    ),
-  },
-  {
-    path: "/customers/:customerId",
-    element: (
-      <AuthGuard>
-        <CustomerDetailPage />
-      </AuthGuard>
-    ),
-  },
-  {
-    path: "/tickets",
-    element: (
-      <AuthGuard>
-        <TicketsPage />
-      </AuthGuard>
-    ),
-  },
-  {
-    path: "/cases",
-    element: (
-      <AuthGuard>
-        <CasesPage />
-      </AuthGuard>
-    ),
-  },
-  {
-    path: "/reports",
-    element: (
-      <AuthGuard>
-        <ReportsPage />
-      </AuthGuard>
-    ),
-  },
-  {
-    path: "/settings",
-    element: (
-      <AuthGuard>
-        <SettingsPage />
-      </AuthGuard>
-    ),
-  },
-  {
     path: "/login",
     element: (
       <GuestGuard>
@@ -86,6 +32,44 @@ export const router = createBrowserRouter([
         <RegisterPage />
       </GuestGuard>
     ),
+  },
+  {
+    path: "/",
+    element: <ProtectedLayout />,
+    children: [
+      {
+        index: true,
+        element: <HomePage />,
+      },
+      {
+        path: "customers",
+        element: <CustomersPage />,
+      },
+      {
+        path: "customers/:customerId",
+        element: <CustomerDetailPage />,
+      },
+      {
+        path: "tickets",
+        element: <TicketsPage />,
+      },
+      {
+        path: "cases",
+        element: <CasesPage />,
+      },
+      {
+        path: "reports",
+        element: <ReportsPage />,
+      },
+      {
+        path: "settings",
+        element: <SettingsPage />,
+      },
+      {
+        path: "*",
+        element: <Navigate to="/" replace />,
+      },
+    ],
   },
   {
     path: "*",

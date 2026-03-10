@@ -13,7 +13,6 @@ import {
   X,
 } from "lucide-react"
 
-import { AppLayout } from "@/app/layouts/AppLayout"
 import { useCurrentUser } from "@/app/features/auth/model/useCurrentUser"
 import {
   createCustomer,
@@ -262,10 +261,8 @@ export function CustomersPage() {
   }
 
   return (
-    <AppLayout
-      title="Clientes"
-      description="Administra la información de clientes, contactos y cuentas activas."
-    >
+    <>
+
       <div className="space-y-6">
         <PageToolbar
           searchPlaceholder="Buscar cliente..."
@@ -519,7 +516,8 @@ export function CustomersPage() {
           </motion.div>
         </div>
       )}
-    </AppLayout>
+    </>
+
   )
 }
 

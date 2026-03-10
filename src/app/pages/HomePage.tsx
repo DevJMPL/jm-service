@@ -1,5 +1,11 @@
-import { Activity, Clock3, Ticket, TrendingUp, Users, WalletCards } from "lucide-react"
-import { AppLayout } from "@/app/layouts/AppLayout"
+import {
+  Activity,
+  Clock3,
+  Ticket,
+  Users,
+} from "lucide-react"
+
+import { PageHeader } from "@/shared/ui/PageHeader"
 import { StatCard } from "@/shared/ui/StatCard"
 import { SectionCard } from "@/shared/ui/SectionCard"
 import { DataTable } from "@/shared/ui/DataTable"
@@ -57,10 +63,12 @@ const recentCases = [
 
 export function HomePage() {
   return (
-    <AppLayout
-      title="Panel principal"
-      description="Supervisa el estado general de clientes, tickets y casos desde un solo lugar."
-    >
+    <>
+      <PageHeader
+        title="Panel principal"
+        description="Supervisa el estado general de clientes, tickets y casos desde un solo lugar."
+      />
+
       <div className="space-y-8">
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
           {metrics.map((item) => (
@@ -144,7 +152,7 @@ export function HomePage() {
           </div>
         </div>
       </div>
-    </AppLayout>
+    </>
   )
 }
 

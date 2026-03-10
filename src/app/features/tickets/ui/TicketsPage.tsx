@@ -1,6 +1,5 @@
 import { motion } from "framer-motion"
 import { Plus, Search, Ticket, TimerReset, TriangleAlert } from "lucide-react"
-import { AppLayout } from "@/app/layouts/AppLayout"
 
 const tickets = [
   {
@@ -28,10 +27,7 @@ const tickets = [
 
 export function TicketsPage() {
   return (
-    <AppLayout
-      title="Tickets"
-      description="Gestiona solicitudes, incidencias y seguimiento operativo del servicio."
-    >
+    <>
       <div className="space-y-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="relative w-full max-w-md">
@@ -91,7 +87,7 @@ export function TicketsPage() {
           ))}
         </motion.div>
       </div>
-    </AppLayout>
+    </>
   )
 }
 
