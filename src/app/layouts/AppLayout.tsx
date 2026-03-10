@@ -43,12 +43,16 @@ export function AppLayout({ children }: AppLayoutProps) {
     return window.localStorage.getItem(SIDEBAR_STORAGE_KEY) === "true"
   })
 
+  const [isReady, setIsReady] = useState(false)
+
+  const updateSidebarCollapsed = (value: boolean) => {
+    setIsSidebarCollapsed(value)
+    window.localStorage.setItem(SIDEBAR_STORAGE_KEY, String(value))
+  }
+
   useEffect(() => {
-    window.localStorage.setItem(
-      SIDEBAR_STORAGE_KEY,
-      String(isSidebarCollapsed)
-    )
-  }, [isSidebarCollapsed])
+    setIsReady(true)
+  }, [])
 
   useEffect(() => {
     const handleStorage = (event: StorageEvent) => {
@@ -63,7 +67,9 @@ export function AppLayout({ children }: AppLayoutProps) {
   return (
     <div className="h-screen overflow-hidden bg-[#fbfbfc]">
       <div
-        className={`grid h-full transition-[grid-template-columns] duration-300 ${
+        className={`grid h-full ${
+          isReady ? "transition-[grid-template-columns] duration-300" : ""
+        } ${
           isSidebarCollapsed
             ? "lg:grid-cols-[92px_1fr]"
             : "lg:grid-cols-[280px_1fr]"
@@ -80,7 +86,9 @@ export function AppLayout({ children }: AppLayoutProps) {
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.35 }}
-                className={`flex items-center ${isSidebarCollapsed ? "justify-center" : "gap-3"}`}
+                className={`flex items-center ${
+                  isSidebarCollapsed ? "justify-center" : "gap-3"
+                }`}
               >
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#2f80ed] text-white shadow-[0_8px_22px_rgba(47,128,237,0.18)]">
                   <Boxes className="h-5 w-5" />
@@ -101,7 +109,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               {!isSidebarCollapsed && (
                 <button
                   type="button"
-                  onClick={() => setIsSidebarCollapsed(true)}
+                  onClick={() => updateSidebarCollapsed(true)}
                   className="flex h-10 w-10 items-center justify-center rounded-full border border-[#eef2f7] bg-white text-[#6f7787] shadow-[0_4px_14px_rgba(120,144,180,0.06)] transition hover:bg-[#f9fbfd] hover:text-[#252733]"
                 >
                   <ChevronLeft className="h-4 w-4" />
@@ -113,7 +121,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               <div className="px-4 pb-2">
                 <button
                   type="button"
-                  onClick={() => setIsSidebarCollapsed(false)}
+                  onClick={() => updateSidebarCollapsed(false)}
                   className="flex h-10 w-full items-center justify-center rounded-full border border-[#eef2f7] bg-white text-[#6f7787] shadow-[0_4px_14px_rgba(120,144,180,0.06)] transition hover:bg-[#f9fbfd] hover:text-[#252733]"
                 >
                   <ChevronRight className="h-4 w-4" />
