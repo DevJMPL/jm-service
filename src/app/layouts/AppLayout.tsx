@@ -19,6 +19,7 @@ import {
 } from "lucide-react"
 
 import { logout } from "@/app/features/auth/api/authApi"
+import { useMyProfile } from "@/app/features/profile/model/useMyProfile"
 
 interface AppLayoutProps {
   children: ReactNode
@@ -37,6 +38,7 @@ const navigation = [
 
 export function AppLayout({ children }: AppLayoutProps) {
   const location = useLocation()
+  const { profile } = useMyProfile()
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
     if (typeof window === "undefined") return false
@@ -240,15 +242,15 @@ export function AppLayout({ children }: AppLayoutProps) {
 
                   <div className="flex items-center gap-3 rounded-full border border-[#eef2f7] bg-white px-3 py-2 shadow-[0_4px_14px_rgba(120,144,180,0.06)]">
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#2f80ed] text-sm font-semibold text-white shadow-[0_8px_22px_rgba(47,128,237,0.18)]">
-                      JP
+                      {getInitials(profile?.full_name, profile?.email)}
                     </div>
 
                     <div className="hidden sm:block">
                       <p className="text-sm font-medium text-[#252733]">
-                        Juan Pérez
+                        {getDisplayName(profile?.full_name, profile?.email)}
                       </p>
                       <p className="text-xs text-[#97a0af]">
-                        Administrador
+                        {getRoleLabel(profile?.role)}
                       </p>
                     </div>
                   </div>
@@ -282,4 +284,40 @@ function IconButton({ children }: { children: ReactNode }) {
       {children}
     </button>
   )
+}
+
+function getInitials(fullName?: string | null, email?: string | null) {
+  if (fullName?.trim()) {
+    const parts = fullName.trim().split(/\s+/).filter(Boolean)
+    const initials = parts
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase() ?? "")
+
+    return initials.join("") || "US"
+  }
+
+  if (email?.trim()) {
+    return email.slice(0, 2).toUpperCase()
+  }
+
+  return "US"
+}
+
+function getDisplayName(fullName?: string | null, email?: string | null) {
+  if (fullName?.trim()) return fullName
+  if (email?.trim()) return email
+  return "Usuario"
+}
+
+function getRoleLabel(role?: string | null) {
+  switch (role) {
+    case "admin":
+      return "Administrador"
+    case "supervisor":
+      return "Supervisor"
+    case "agent":
+      return "Agente"
+    default:
+      return "Usuario"
+  }
 }
