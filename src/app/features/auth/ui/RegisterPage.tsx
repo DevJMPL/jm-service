@@ -1,189 +1,179 @@
-import { useMemo, useState } from "react"
-import type { ChangeEvent, FormEvent } from "react"
-import { Link, useNavigate } from "react-router-dom"
-import { motion } from "framer-motion"
-import { Apple, Facebook, Mail } from "lucide-react"
+import { useMemo, useState } from "react";
+import type { FormEvent } from "react";
+import { Link } from "react-router-dom";
 
-import { register } from "@/app/features/auth/api/authApi"
-import { AuthSplitLayout } from "@/app/features/auth/ui/AuthSplitLayout"
-import { AuthTextField } from "@/shared/ui/AuthTextField"
-import { AuthPasswordField } from "@/shared/ui/AuthPasswordField"
-import { AuthPrimaryButton } from "@/shared/ui/AuthPrimaryButton"
-import { AuthMessage } from "@/shared/ui/AuthMessage"
-import { AuthSocialButton } from "@/shared/ui/AuthSocialButton"
+import { registerWithWorkspace } from "@/app/features/auth/api/authApi";
+import { AuthSplitLayout } from "@/app/features/auth/ui/AuthSplitLayout";
+import { AuthMessage } from "@/shared/ui/AuthMessage";
+import { AuthPrimaryButton } from "@/shared/ui/AuthPrimaryButton";
+import { AuthTextField } from "@/shared/ui/AuthTextField";
+import { AuthPasswordField } from "@/shared/ui/AuthPasswordField";
 
-function getRegisterErrorMessage(message?: string) {
-  if (!message) return "No fue posible crear tu cuenta. Inténtalo de nuevo."
+type RegisterFormState = {
+  fullName: string;
+  email: string;
+  password: string;
+};
 
-  const normalized = message.toLowerCase()
+const initialState: RegisterFormState = {
+  fullName: "",
+  email: "",
+  password: "",
+};
 
-  if (normalized.includes("already registered")) {
-    return "Este correo ya se encuentra registrado."
+function getRegisterErrorMessage(error: unknown) {
+  const message =
+    error instanceof Error
+      ? error.message
+      : "No fue posible crear tu cuenta. Intenta nuevamente.";
+
+  const normalized = message.toLowerCase();
+
+  if (normalized.includes("user already registered")) {
+    return "Este correo ya está registrado.";
   }
 
-  if (normalized.includes("password")) {
-    return "La contraseña no cumple con los requisitos mínimos."
+  if (normalized.includes("signup is disabled")) {
+    return "El registro de usuarios está deshabilitado.";
   }
 
-  return message
+  if (
+    normalized.includes("too many requests") ||
+    normalized.includes("over_email_send_rate_limit")
+  ) {
+    return "Demasiados intentos. Espera un momento antes de volver a intentarlo.";
+  }
+
+  return message;
 }
 
 export function RegisterPage() {
-  const navigate = useNavigate()
+  const [form, setForm] = useState<RegisterFormState>(initialState);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const [fullName, setFullName] = useState("")
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [errorMsg, setErrorMsg] = useState<string | null>(null)
-  const [successMsg, setSuccessMsg] = useState<string | null>(null)
-
-  const canSubmit = useMemo(() => {
+  const isValid = useMemo(() => {
     return (
-      fullName.trim().length > 0 &&
-      email.trim().length > 0 &&
-      password.trim().length > 0 &&
-      !loading
-    )
-  }, [fullName, email, password, loading])
+      form.fullName.trim().length >= 3 &&
+      form.email.trim().length > 0 &&
+      form.password.trim().length >= 6
+    );
+  }, [form]);
 
-  const handleFullNameChange = (e: ChangeEvent<HTMLInputElement>) => {
-    if (errorMsg) setErrorMsg(null)
-    if (successMsg) setSuccessMsg(null)
-    setFullName(e.target.value)
-  }
-
-  const handleEmailChange = (e: ChangeEvent<HTMLInputElement>) => {
-    if (errorMsg) setErrorMsg(null)
-    if (successMsg) setSuccessMsg(null)
-    setEmail(e.target.value)
-  }
-
-  const handlePasswordChange = (e: ChangeEvent<HTMLInputElement>) => {
-    if (errorMsg) setErrorMsg(null)
-    if (successMsg) setSuccessMsg(null)
-    setPassword(e.target.value)
-  }
-
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-
-    if (!canSubmit) return
-
-    setErrorMsg(null)
-    setSuccessMsg(null)
-    setLoading(true)
-
-    const { error, data } = await register(email.trim(), password, fullName.trim())
-
-    if (error) {
-      setErrorMsg(getRegisterErrorMessage(error.message))
-      setLoading(false)
-      return
+  function updateField<K extends keyof RegisterFormState>(
+    key: K,
+    value: RegisterFormState[K],
+  ) {
+    if (errorMessage) {
+      setErrorMessage(null);
     }
 
-    if (!data.session) {
-      setSuccessMsg("Tu cuenta fue creada. Revisa tu correo para confirmar el acceso.")
-      setLoading(false)
-      return
+    setForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!isValid || isSubmitting) {
+      return;
     }
 
-    navigate("/", { replace: true })
+    setIsSubmitting(true);
+    setErrorMessage(null);
+    setSuccessMessage(null);
+
+    try {
+      const result = await registerWithWorkspace({
+        fullName: form.fullName,
+        email: form.email,
+        password: form.password,
+      });
+
+      if (result.requiresEmailConfirmation) {
+        setSuccessMessage(
+          "Tu cuenta fue creada correctamente. Revisa tu correo para confirmar tu email. Después inicia sesión para crear tu primer workspace.",
+        );
+      } else {
+        setSuccessMessage(
+          "Tu cuenta fue creada correctamente. Ya puedes iniciar sesión.",
+        );
+      }
+
+      setForm(initialState);
+    } catch (error) {
+      setErrorMessage(getRegisterErrorMessage(error));
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
-    <AuthSplitLayout title="Reach Service">
-      <motion.div
-        initial={{ opacity: 0, y: 14 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35 }}
-        className="space-y-5"
-      >
-        <div className="space-y-2 text-center">
-          <h1 className="text-[2.1rem] font-semibold tracking-[-0.05em] text-[#252733] leading-tight">
-            Crea tu cuenta
-          </h1>
-          <p className="text-sm text-[#8f95a3] leading-6">
-            Configura tu acceso para gestionar clientes, tickets y casos.
-          </p>
-        </div>
+    <AuthSplitLayout
+      title="Crea tu cuenta"
+      subtitle="Regístrate para comenzar a usar Reach Service."
+    >
+      <form className="space-y-4" onSubmit={handleSubmit}>
+        <AuthTextField
+          id="fullName"
+          label="Nombre completo"
+          type="text"
+          value={form.fullName}
+          onChange={(event) => updateField("fullName", event.target.value)}
+          placeholder="Juan Manuel Pérez"
+          autoComplete="name"
+          required
+        />
 
-        <div className="space-y-4">
-          <div className="flex items-center justify-center gap-3">
-            <AuthSocialButton className="h-12 w-12">
-              <Facebook className="h-4 w-4 text-[#1877f2]" />
-            </AuthSocialButton>
+        <AuthTextField
+          id="email"
+          label="Correo electrónico"
+          type="email"
+          value={form.email}
+          onChange={(event) => updateField("email", event.target.value)}
+          placeholder="correo@empresa.com"
+          autoComplete="email"
+          required
+        />
 
-            <AuthSocialButton className="h-12 w-12">
-              <Mail className="h-4 w-4 text-[#ea4335]" />
-            </AuthSocialButton>
+        <AuthPasswordField
+          id="password"
+          label="Contraseña"
+          value={form.password}
+          onChange={(event) => updateField("password", event.target.value)}
+          placeholder="Mínimo 6 caracteres"
+          autoComplete="new-password"
+          required
+        />
 
-            <AuthSocialButton className="h-12 w-12">
-              <Apple className="h-4 w-4 text-black" />
-            </AuthSocialButton>
-          </div>
+        {errorMessage ? (
+          <AuthMessage type="error">{errorMessage}</AuthMessage>
+        ) : null}
 
-          <div className="flex items-center gap-4">
-            <div className="h-px flex-1 bg-[#e8ecf3]" />
-            <span className="text-xs text-[#a0a5b5]">o continúa con tu correo</span>
-            <div className="h-px flex-1 bg-[#e8ecf3]" />
-          </div>
-        </div>
+        {successMessage ? (
+          <AuthMessage type="success">{successMessage}</AuthMessage>
+        ) : null}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <AuthTextField
-            id="fullName"
-            label="Nombre completo"
-            type="text"
-            autoComplete="name"
-            value={fullName}
-            onChange={handleFullNameChange}
-            placeholder="Tu nombre"
-            error={errorMsg}
-            required
-          />
+        <AuthPrimaryButton
+          type="submit"
+          loading={isSubmitting}
+          disabled={!isValid || isSubmitting}
+        >
+          {isSubmitting ? "Creando cuenta..." : "Crear cuenta"}
+        </AuthPrimaryButton>
 
-          <AuthTextField
-            id="email"
-            label="Correo electrónico"
-            type="email"
-            autoComplete="email"
-            value={email}
-            onChange={handleEmailChange}
-            placeholder="tu@empresa.com"
-            error={errorMsg}
-            required
-          />
-
-          <AuthPasswordField
-            id="password"
-            label="Contraseña"
-            autoComplete="new-password"
-            value={password}
-            onChange={handlePasswordChange}
-            placeholder="Crea una contraseña"
-            error={errorMsg}
-            required
-          />
-
-          {errorMsg && <AuthMessage type="error">{errorMsg}</AuthMessage>}
-          {successMsg && <AuthMessage type="success">{successMsg}</AuthMessage>}
-
-          <AuthPrimaryButton type="submit" loading={loading} disabled={!canSubmit}>
-            {loading ? "Creando cuenta..." : "Crear cuenta"}
-          </AuthPrimaryButton>
-        </form>
-
-        <p className="text-center text-sm text-[#7f8593]">
-          ¿Ya tienes una cuenta?{" "}
+        <p className="text-center text-sm text-slate-500">
+          ¿Ya tienes cuenta?{" "}
           <Link
             to="/login"
-            className="font-medium text-[#2f80ed] transition hover:text-[#2274e2]"
+            className="font-medium text-slate-800 underline underline-offset-4"
           >
             Inicia sesión
           </Link>
         </p>
-      </motion.div>
+      </form>
     </AuthSplitLayout>
-  )
+  );
 }
+
+export default RegisterPage;

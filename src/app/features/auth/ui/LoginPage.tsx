@@ -1,76 +1,85 @@
-import { useMemo, useState } from "react"
-import type { ChangeEvent, FormEvent } from "react"
-import { Link, useNavigate } from "react-router-dom"
-import { motion } from "framer-motion"
-import { Apple, Facebook, Mail } from "lucide-react"
+import { useMemo, useState } from "react";
+import type { ChangeEvent, FormEvent } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { Apple, Facebook, Mail } from "lucide-react";
 
-import { login } from "@/app/features/auth/api/authApi"
-import { AuthSplitLayout } from "@/app/features/auth/ui/AuthSplitLayout"
-import { AuthTextField } from "@/shared/ui/AuthTextField"
-import { AuthPasswordField } from "@/shared/ui/AuthPasswordField"
-import { AuthPrimaryButton } from "@/shared/ui/AuthPrimaryButton"
-import { AuthMessage } from "@/shared/ui/AuthMessage"
-import { AuthSocialButton } from "@/shared/ui/AuthSocialButton"
+import { login } from "@/app/features/auth/api/authApi";
+import { AuthSplitLayout } from "@/app/features/auth/ui/AuthSplitLayout";
+import { useWorkspaceStore } from "@/app/features/workspaces/model/useWorkspace";
+import { AuthTextField } from "@/shared/ui/AuthTextField";
+import { AuthPasswordField } from "@/shared/ui/AuthPasswordField";
+import { AuthPrimaryButton } from "@/shared/ui/AuthPrimaryButton";
+import { AuthMessage } from "@/shared/ui/AuthMessage";
+import { AuthSocialButton } from "@/shared/ui/AuthSocialButton";
 
 function getAuthErrorMessage(message?: string) {
-  if (!message) return "No fue posible iniciar sesión. Inténtalo de nuevo."
+  if (!message) return "No fue posible iniciar sesión. Inténtalo de nuevo.";
 
-  const normalized = message.toLowerCase()
+  const normalized = message.toLowerCase();
 
   if (
     normalized.includes("invalid login credentials") ||
     normalized.includes("invalid credentials")
   ) {
-    return "El correo o la contraseña son incorrectos."
+    return "El correo o la contraseña son incorrectos.";
   }
 
   if (normalized.includes("email not confirmed")) {
-    return "Confirma tu correo electrónico antes de iniciar sesión."
+    return "Confirma tu correo electrónico antes de iniciar sesión.";
   }
 
-  return message
+  return message;
 }
 
 export function LoginPage() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+  const { loadWorkspaces } = useWorkspaceStore();
 
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const canSubmit = useMemo(() => {
-    return email.trim().length > 0 && password.trim().length > 0 && !loading
-  }, [email, password, loading])
+    return email.trim().length > 0 && password.trim().length > 0 && !loading;
+  }, [email, password, loading]);
 
   const handleEmailChange = (e: ChangeEvent<HTMLInputElement>) => {
-    if (errorMsg) setErrorMsg(null)
-    setEmail(e.target.value)
-  }
+    if (errorMsg) setErrorMsg(null);
+    setEmail(e.target.value);
+  };
 
   const handlePasswordChange = (e: ChangeEvent<HTMLInputElement>) => {
-    if (errorMsg) setErrorMsg(null)
-    setPassword(e.target.value)
-  }
+    if (errorMsg) setErrorMsg(null);
+    setPassword(e.target.value);
+  };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
+    e.preventDefault();
 
-    if (!canSubmit) return
+    if (!canSubmit) return;
 
-    setErrorMsg(null)
-    setLoading(true)
+    setErrorMsg(null);
+    setLoading(true);
 
-    const { error } = await login(email.trim(), password)
+    try {
+      const authData = await login(email.trim(), password);
+      const userId = authData.user?.id;
 
-    if (error) {
-      setErrorMsg(getAuthErrorMessage(error.message))
-      setLoading(false)
-      return
+      if (userId) {
+        await loadWorkspaces(userId);
+      }
+
+      navigate("/", { replace: true });
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "No fue posible iniciar sesión.";
+      setErrorMsg(getAuthErrorMessage(message));
+    } finally {
+      setLoading(false);
     }
-
-    navigate("/", { replace: true })
-  }
+  };
 
   return (
     <AuthSplitLayout title="Reach Service">
@@ -85,21 +94,22 @@ export function LoginPage() {
             Inicia sesión en Reach Service
           </h1>
           <p className="text-[15px] text-[#8f95a3]">
-            Accede a tu espacio de trabajo y continúa con la gestión de clientes, tickets y casos.
+            Accede a tu espacio de trabajo y continúa con la gestión de clientes,
+            tickets y casos.
           </p>
         </div>
 
         <div className="space-y-5">
           <div className="flex items-center justify-center gap-4">
-            <AuthSocialButton>
+            <AuthSocialButton type="button">
               <Facebook className="h-5 w-5 text-[#1877f2]" />
             </AuthSocialButton>
 
-            <AuthSocialButton>
+            <AuthSocialButton type="button">
               <Mail className="h-5 w-5 text-[#ea4335]" />
             </AuthSocialButton>
 
-            <AuthSocialButton>
+            <AuthSocialButton type="button">
               <Apple className="h-5 w-5 text-black" />
             </AuthSocialButton>
           </div>
@@ -154,5 +164,5 @@ export function LoginPage() {
         </p>
       </motion.div>
     </AuthSplitLayout>
-  )
+  );
 }

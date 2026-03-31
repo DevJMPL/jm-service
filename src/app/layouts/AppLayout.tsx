@@ -1,6 +1,6 @@
-import { useEffect, useState, type ReactNode } from "react"
-import { Link, useLocation } from "react-router-dom"
-import { motion } from "framer-motion"
+import { useEffect, useState, type ReactNode } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import {
   BarChart3,
   Bell,
@@ -16,16 +16,17 @@ import {
   Settings,
   Ticket,
   Users,
-} from "lucide-react"
+} from "lucide-react";
 
-import { logout } from "@/app/features/auth/api/authApi"
-import { useMyProfile } from "@/app/features/profile/model/useMyProfile"
+import { signOut } from "@/app/features/auth/api/authApi";
+import { useMyProfile } from "@/app/features/profile/model/useMyProfile";
+import { WorkspaceSwitcher } from "@/app/features/workspaces/ui/WorkspaceSwitcher";
 
 interface AppLayoutProps {
-  children: ReactNode
+  children: ReactNode;
 }
 
-const SIDEBAR_STORAGE_KEY = "reach-service:sidebar-collapsed"
+const SIDEBAR_STORAGE_KEY = "reach-service:sidebar-collapsed";
 
 const navigation = [
   { label: "Inicio", href: "/", icon: LayoutDashboard },
@@ -34,37 +35,58 @@ const navigation = [
   { label: "Casos", href: "/cases", icon: FileText },
   { label: "Reportes", href: "/reports", icon: BarChart3 },
   { label: "Configuración", href: "/settings", icon: Settings },
-]
+];
 
 export function AppLayout({ children }: AppLayoutProps) {
-  const location = useLocation()
-  const { profile } = useMyProfile()
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { profile } = useMyProfile();
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false
-    return window.localStorage.getItem(SIDEBAR_STORAGE_KEY) === "true"
-  })
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem(SIDEBAR_STORAGE_KEY) === "true";
+  });
 
-  const [isReady, setIsReady] = useState(false)
+  const [isReady, setIsReady] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   const updateSidebarCollapsed = (value: boolean) => {
-    setIsSidebarCollapsed(value)
-    window.localStorage.setItem(SIDEBAR_STORAGE_KEY, String(value))
+    setIsSidebarCollapsed(value);
+
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(SIDEBAR_STORAGE_KEY, String(value));
+    }
+  };
+
+  async function handleSignOut() {
+    if (isSigningOut) return;
+
+    try {
+      setIsSigningOut(true);
+      await signOut();
+      navigate("/login");
+    } catch (error) {
+      console.error("No se pudo cerrar la sesión", error);
+    } finally {
+      setIsSigningOut(false);
+    }
   }
 
   useEffect(() => {
-    setIsReady(true)
-  }, [])
+    setIsReady(true);
+  }, []);
 
   useEffect(() => {
-    const handleStorage = (event: StorageEvent) => {
-      if (event.key !== SIDEBAR_STORAGE_KEY) return
-      setIsSidebarCollapsed(event.newValue === "true")
-    }
+    if (typeof window === "undefined") return;
 
-    window.addEventListener("storage", handleStorage)
-    return () => window.removeEventListener("storage", handleStorage)
-  }, [])
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key !== SIDEBAR_STORAGE_KEY) return;
+      setIsSidebarCollapsed(event.newValue === "true");
+    };
+
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
 
   return (
     <div className="h-screen overflow-hidden bg-[#fbfbfc]">
@@ -131,13 +153,19 @@ export function AppLayout({ children }: AppLayoutProps) {
               </div>
             )}
 
+            {!isSidebarCollapsed && (
+              <div className="px-4 pb-2">
+                <WorkspaceSwitcher />
+              </div>
+            )}
+
             <nav className="flex-1 overflow-y-auto px-4 py-4">
               <div className="space-y-2">
                 {navigation.map((item, index) => {
-                  const Icon = item.icon
+                  const Icon = item.icon;
                   const isActive =
                     location.pathname === item.href ||
-                    (item.href !== "/" && location.pathname.startsWith(item.href))
+                    (item.href !== "/" && location.pathname.startsWith(item.href));
 
                   return (
                     <motion.div
@@ -163,7 +191,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                         {!isSidebarCollapsed && <span>{item.label}</span>}
                       </Link>
                     </motion.div>
-                  )
+                  );
                 })}
               </div>
             </nav>
@@ -192,17 +220,21 @@ export function AppLayout({ children }: AppLayoutProps) {
                 </div>
 
                 <button
-                  onClick={() => logout()}
+                  type="button"
+                  onClick={handleSignOut}
+                  disabled={isSigningOut}
                   title={isSidebarCollapsed ? "Cerrar sesión" : undefined}
                   className={[
-                    "mt-4 flex rounded-full border border-[#e7edf5] bg-white text-sm font-medium text-[#4f5666] transition hover:bg-[#f9fbfd]",
+                    "mt-4 flex rounded-full border border-[#e7edf5] bg-white text-sm font-medium text-[#4f5666] transition hover:bg-[#f9fbfd] disabled:cursor-not-allowed disabled:opacity-60",
                     isSidebarCollapsed
                       ? "h-10 w-full items-center justify-center"
                       : "w-full items-center justify-center gap-2 px-4 py-2.5",
                   ].join(" ")}
                 >
                   <LogOut className="h-4 w-4 shrink-0" />
-                  {!isSidebarCollapsed && <span>Cerrar sesión</span>}
+                  {!isSidebarCollapsed && (
+                    <span>{isSigningOut ? "Cerrando..." : "Cerrar sesión"}</span>
+                  )}
                 </button>
               </div>
             </div>
@@ -232,6 +264,10 @@ export function AppLayout({ children }: AppLayoutProps) {
                 </div>
 
                 <div className="flex items-center gap-3">
+                  <div className="hidden min-w-[220px] xl:block">
+                    <WorkspaceSwitcher />
+                  </div>
+
                   <IconButton>
                     <Bell className="h-4 w-4" />
                   </IconButton>
@@ -273,51 +309,52 @@ export function AppLayout({ children }: AppLayoutProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 function IconButton({ children }: { children: ReactNode }) {
   return (
     <button
+      type="button"
       className="flex h-11 w-11 items-center justify-center rounded-full border border-[#eef2f7] bg-white text-[#6f7787] shadow-[0_4px_14px_rgba(120,144,180,0.06)] transition hover:bg-[#f9fbfd] hover:text-[#252733]"
     >
       {children}
     </button>
-  )
+  );
 }
 
 function getInitials(fullName?: string | null, email?: string | null) {
   if (fullName?.trim()) {
-    const parts = fullName.trim().split(/\s+/).filter(Boolean)
+    const parts = fullName.trim().split(/\s+/).filter(Boolean);
     const initials = parts
       .slice(0, 2)
-      .map((part) => part[0]?.toUpperCase() ?? "")
+      .map((part) => part[0]?.toUpperCase() ?? "");
 
-    return initials.join("") || "US"
+    return initials.join("") || "US";
   }
 
   if (email?.trim()) {
-    return email.slice(0, 2).toUpperCase()
+    return email.slice(0, 2).toUpperCase();
   }
 
-  return "US"
+  return "US";
 }
 
 function getDisplayName(fullName?: string | null, email?: string | null) {
-  if (fullName?.trim()) return fullName
-  if (email?.trim()) return email
-  return "Usuario"
+  if (fullName?.trim()) return fullName;
+  if (email?.trim()) return email;
+  return "Usuario";
 }
 
 function getRoleLabel(role?: string | null) {
   switch (role) {
     case "admin":
-      return "Administrador"
+      return "Administrador";
     case "supervisor":
-      return "Supervisor"
+      return "Supervisor";
     case "agent":
-      return "Agente"
+      return "Agente";
     default:
-      return "Usuario"
+      return "Usuario";
   }
 }
